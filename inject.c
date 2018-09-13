@@ -96,13 +96,17 @@ int main(int argc, char *argv[]) {
    *
    * i don't want to deal with that, so let's just assume that we can get a nice page
    * elsewhere and jump there
+   *
+   * you also probably want to avoid writing to shared maps, as that will actually edit
+   * some innocent file on the disk
+   * this also applies to the instruction at rip, but we really do need to patch that one
    */
   sprintf(path, "/proc/%d/maps", pid);
   f = fopen(path, "r");
   long begin, end;
   char perm[] = "rwxp";
   while (fscanf(f, "%lx-%lx %s %*[^\n]", &begin, &end, perm) > 0)
-    if (perm[2] == 'x' && !(begin <= rip && rip <= end))
+    if (perm[2] == 'x' && perm[3] != 's' && !(begin <= rip && rip <= end))
       break;
   fclose(f);
 
